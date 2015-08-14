@@ -8,7 +8,6 @@ let Store = Reflux.createStore({
   listenables: [Actions],
 
   init() {
-    console.log('store init');
   }
 
 });
