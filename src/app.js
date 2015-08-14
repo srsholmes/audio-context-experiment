@@ -39,21 +39,24 @@ var getStreamUrl = (url) => {
 
 let soundCloudAudio = () => {
 	let streamURL = "http://api.soundcloud.com/tracks/293/stream?client_id=9c470b57005415330972a0b5cca327e2";
+	
+	//Need to refactor this with a promise.... 
 	let streamURL2 = getStreamUrl('https://soundcloud.com/matzelu/summer-is-comming');
-	let player = document.getElementById('player');
+	let streamURL3 = "https://api.soundcloud.com/tracks/218176109/stream?client_id=9c470b57005415330972a0b5cca327e2";
+
 	let audio;
 	let context = new AudioContext();
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', streamURL2, true);
+	xhr.open('GET', streamURL3, true);
 	xhr.responseType = 'arraybuffer';
 	xhr.onload = function() {
 		console.log('loooad');
-	    audio = context.createBufferSource();
-	    context.decodeAudioData(xhr.response, function(buffer) {
-        audio.buffer = buffer;
-        audio.connect(context.destination);
-        audio.start();
-	    });
+    audio = context.createBufferSource();
+    context.decodeAudioData(xhr.response, function(buffer) {
+      audio.buffer = buffer;
+      audio.connect(context.destination);
+      audio.start();
+    });
 	};
 	xhr.send();
 	// player.setAttribute('src', getStreamUrl(url));
