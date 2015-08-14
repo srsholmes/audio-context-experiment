@@ -1,6 +1,9 @@
 require('babelify/polyfill');
 import 'whatwg-fetch';
 
+import status from './modules/status';
+import json from './modules/json';
+
 let React = require('react');
 
 //Needed for React Developer Tools
@@ -18,59 +21,39 @@ SC.initialize({
   client_id: CLIENT_ID
 });
 
-//from:
-//http://stackoverflow.com/questions/10231333/how-to-get-a-stream-from-a-simple-soundcloud-url
-//
-
-//This gets the stream url from a normal soundcloud link. 
 var getStreamUrl = (url) => {
 	var apiURL = `http://api.soundcloud.com/resolve.json?url=${url}&client_id=${CLIENT_ID}`;
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', apiURL, true);
-	xhr.onload = function(response) {
-		var streamURL = JSON.parse(response.currentTarget.response).stream_url;
-		var streamURLKey = `${streamURL}?client_id=${CLIENT_ID}`;
-		console.log(streamURLKey);
-		return streamURLKey;
-	};
-	xhr.send();
+	return fetch(apiURL)
+  .then(status)
+  .then(json)
+  .then((data) => ({ data }));
 };
 
-
 let soundCloudAudio = () => {
-	let streamURL = "http://api.soundcloud.com/tracks/293/stream?client_id=9c470b57005415330972a0b5cca327e2";
-	
-	//Need to refactor this with a promise.... 
+	// let streamURL = "http://api.soundcloud.com/tracks/293/stream?client_id=9c470b57005415330972a0b5cca327e2";
 	let streamURL2 = getStreamUrl('https://soundcloud.com/matzelu/summer-is-comming');
-	let streamURL3 = "https://api.soundcloud.com/tracks/218176109/stream?client_id=9c470b57005415330972a0b5cca327e2";
+	// let streamURL3 = "https://api.soundcloud.com/tracks/218176109/stream?client_id=9c470b57005415330972a0b5cca327e2";
 
 	let audio;
 	let context = new AudioContext();
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', streamURL3, true);
-	xhr.responseType = 'arraybuffer';
-	xhr.onload = function() {
-		console.log('loooad');
-    audio = context.createBufferSource();
-    context.decodeAudioData(xhr.response, function(buffer) {
-      audio.buffer = buffer;
-      audio.connect(context.destination);
-      audio.start();
-    });
-	};
-	xhr.send();
-	// player.setAttribute('src', getStreamUrl(url));
-	// player.play();
 
-	// let audioCtx = new (window.AudioContext || window.webkitAudioContext);
-	// let analyser = audioCtx.createAnalyser();
-	// analyser.fftSize = 256;
-	// let source = audioCtx.createMediaElementSource(player);
-	// source.connect(analyser);
-	// analyser.connect(audioCtx.destination);
-
- //  player.play();
-
+	streamURL2.then((data) => {
+		let streamURL = `${data.data.stream_url}?client_id=${CLIENT_ID}`;
+		console.log(streamURL);
+		xhr.open('GET', streamURL, true);
+		xhr.responseType = 'arraybuffer';
+		xhr.onload = function() {
+			console.log('loooad');
+	    audio = context.createBufferSource();
+	    context.decodeAudioData(xhr.response, function(buffer) {
+	      audio.buffer = buffer;
+	      audio.connect(context.destination);
+	      audio.start();
+	    });
+		};
+		xhr.send();
+	});	
 }();
 
 // SC.stream("/tracks/293", function(sound){
