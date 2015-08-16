@@ -58,15 +58,14 @@ let soundCloudAudio = () => {
 	      //Anaylse that shit
 	      analyser = audioCtx.createAnalyser();
 	      analyser.fftSize = 256;
-	      let dataArray = new Uint8Array(128); // Uint8Array should be the same length as the frequencyBinCount 
+	      let dataArray = new Uint8Array(128);
 	      audio.connect(analyser);
 	      analyser.connect(audioCtx.destination);
 
 	      let sampleAudioStream = function() {
 	          analyser.getByteFrequencyData(dataArray);
-	          // calculate an overall volume value
 	          var total = 0;
-	          for (var i = 0; i < 80; i++) { // get the volume from the first 80 bins, else it gets too loud with treble
+	          for (var i = 0; i < 80; i++) {
 	              total += dataArray[i];
 	          }
 	          dataArray.volume = total;
