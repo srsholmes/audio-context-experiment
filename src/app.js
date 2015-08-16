@@ -26,7 +26,10 @@ var getStreamUrl = (url) => {
 	return fetch(apiURL)
   .then(status)
   .then(json)
-  .then((data) => ({ data }));
+  .then((data) => { 
+  	console.log(data);
+  	return data.stream_url
+  });
 };
 
 let soundCloudAudio = () => {
@@ -35,40 +38,59 @@ let soundCloudAudio = () => {
 	// let streamURL3 = "https://api.soundcloud.com/tracks/218176109/stream?client_id=9c470b57005415330972a0b5cca327e2";
 
 	let audio;
-	let context = new AudioContext();
-	var xhr = new XMLHttpRequest();
+	let analyser;
+	let audioCtx = new AudioContext();
+	let xhr = new XMLHttpRequest();
+	let player = document.getElementById('player'); 
 
-	streamURL2.then((data) => {
-		let streamURL = `${data.data.stream_url}?client_id=${CLIENT_ID}`;
-		console.log(streamURL);
+	streamURL2.then((streamURL) => {
+		streamURL = `${streamURL}?client_id=${CLIENT_ID}`;
 		xhr.open('GET', streamURL, true);
 		xhr.responseType = 'arraybuffer';
 		xhr.onload = function() {
-			console.log('loooad');
-	    audio = context.createBufferSource();
-	    context.decodeAudioData(xhr.response, function(buffer) {
+			console.log('xhr loooad');
+	    audio = audioCtx.createBufferSource();
+	    audioCtx.decodeAudioData(xhr.response, (buffer) => {
 	      audio.buffer = buffer;
-	      audio.connect(context.destination);
+	      audio.connect(audioCtx.destination);
 	      audio.start();
+
+	      //Anaylse that shit
+	      analyser = audioCtx.createAnalyser();
+	      analyser.fftSize = 256; // see - there is that 'fft' thing. 
+	      let dataArray = new Uint8Array(analyser.frequencyBinCount); // Uint8Array should be the same length as the frequencyBinCount 
+
+	      // var source = audioCtx.createMediaElementSource(player); // this is where we hook up the <audio> element
+	      // source.connect(analyser);
+	      // analyser.connect(audioCtx.destination);
+
+	      var sampleAudioStream = function() {
+	      	console.log('sampleAudioStream');
+	      	console.log(audio);
+	      	console.log(dataArray);
+	          // This closure is where the magic happens. Because it gets called with setInterval below, it continuously samples the audio data
+	          // and updates the streamData and volume properties. This the SoundCouldAudioSource function can be passed to a visualization routine and 
+	          // continue to give real-time data on the audio stream.
+	          analyser.getByteFrequencyData(dataArray);
+	          // calculate an overall volume value
+	          var total = 0;
+	          for (var i = 0; i < 80; i++) { // get the volume from the first 80 bins, else it gets too loud with treble
+	              total += dataArray[i];
+	          }
+	          dataArray.volume = total;
+	      };
+	      setInterval(sampleAudioStream, 2000);
+
 	    });
 		};
 		xhr.send();
 	});	
 }();
 
-// SC.stream("/tracks/293", function(sound){
-// 	// sound.play();
-//   soundCloudAudio(sound);
-// });
-
-//
-// SC.get('/groups/55517/tracks', {limit: 1}, function(tracks){
-//   console.log('Latest track: ' + tracks[0].title);
-// });
-
 // var SoundCloudAudioSource = function(audioElement) {
 //     var player = document.getElementById(audioElement);
 //     var self = this;
+//     console.log(this);
 //     var analyser;
 //     var audioCtx = new (window.AudioContext || window.webkitAudioContext); // this is because it's not been standardised accross browsers yet.
 //     analyser = audioCtx.createAnalyser();
@@ -82,6 +104,7 @@ let soundCloudAudio = () => {
 //         // and updates the streamData and volume properties. This the SoundCouldAudioSource function can be passed to a visualization routine and 
 //         // continue to give real-time data on the audio stream.
 //         analyser.getByteFrequencyData(self.streamData);
+//         console.log(self.streamData);
 //         // calculate an overall volume value
 //         var total = 0;
 //         for (var i = 0; i < 80; i++) { // get the volume from the first 80 bins, else it gets too loud with treble
