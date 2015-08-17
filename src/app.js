@@ -50,9 +50,9 @@ let getData = (url) => {
   source = audioCtx.createBufferSource();
   source.start(0);
   play.setAttribute('disabled', 'disabled');
-  let myRequest = new Request(url);
-  fetch(myRequest).then((response) => {
-    response.arrayBuffer().then((buffer) => {
+  let req = new Request(url);
+  fetch(req).then((res) => {
+    res.arrayBuffer().then((buffer) => {
       audioCtx.decodeAudioData(buffer, (decodedData) => {
         source.buffer = decodedData;
         source.connect(audioCtx.destination); 
