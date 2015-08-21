@@ -16,6 +16,9 @@ React.render(<App/>, document.querySelector('div[app]'));
 
 const CLIENT_ID = `9c470b57005415330972a0b5cca327e2`;
 
+// SC.initialize({
+//   client_id: CLIENT_ID
+// });
 
 let d = document;
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -27,16 +30,17 @@ let context = canvas.getContext("2d");
 
 let analyser;
 let bin;
+let source;
 
-// //Anaylse that shit
-let analyse = (dest, source) => {
+let decode = buffer => new Promise(resolve => audioCtx.decodeAudioData(buffer, resolve));
+
+//Anaylse that shit
+let analyse = () => {
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
   let dataArray = new Uint8Array(128);
-  console.log(source);
-  console.log(dest);
   source.connect(analyser);
-  analyser.connect(dest);
+  analyser.connect(audioCtx.destination);
 
   let sampleAudioStream = function() {
     analyser.getByteFrequencyData(dataArray);
@@ -51,25 +55,27 @@ let analyse = (dest, source) => {
   //Canvas visual stuff
   let draw = () => {
     for(bin = 0; bin < dataArray.length; bin ++) {
-      let val = dataArray[bin];
-      let red = val;
-      let green = 255 - val;
-      let blue = val / 2; 
-      context.fillStyle = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
-      context.fillRect(bin * 2, 0, 2, 200);
+        let val = dataArray[bin];
+        let red = val;
+        let green = 255 - val;
+        let blue = val / 2; 
+        context.fillStyle = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
+        context.fillRect(bin * 2, 0, 2, 200);
     }          
   };
   setInterval(draw, 20);
 }
 
 play.onclick = () => {
-  soundcloudFetch('https://soundcloud.com/matzelu/summer-is-comming', CLIENT_ID, audioCtx)
-  .then((dest, source) => {
-    //do stuff in here.
-    console.log('resolved');
-    console.log(dest, source);
-    analyse(dest, source);
-  });
+  soundcloudFetch('https://soundcloud.com/matzelu/summer-is-comming')
+    .then(decode)
+    .then(decodedBuffer => {
+      source = audioCtx.createBufferSource();
+      source.buffer = decodedBuffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+      analyse();
+    });
 }
 
 stop.onclick = () => {
