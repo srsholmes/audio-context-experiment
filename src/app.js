@@ -14,9 +14,6 @@ import { App } from './components';
 
 React.render(<App/>, document.querySelector('div[app]'));
 
-const CLIENT_ID = `9c470b57005415330972a0b5cca327e2`;
-
-
 let d = document;
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -38,7 +35,6 @@ let setupSource = decodedBuffer => {
   source.buffer = decodedBuffer;
   source.connect(audioCtx.destination);
   play.removeAttribute('disabled');
-  // source.start(0);
   analyse();
 }
 
@@ -63,20 +59,20 @@ let analyse = () => {
   //Canvas visual stuff
   let draw = () => {
     for(bin = 0; bin < dataArray.length; bin ++) {
-        let val = dataArray[bin];
-        let red = val;
-        let green = 255 - val;
-        let blue = val / 2; 
-        context.fillStyle = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
-        context.fillRect(bin * 2, 0, 2, 200);
+      let val = dataArray[bin];
+      let red = val;
+      let green = 255 - val;
+      let blue = val / 2; 
+      context.fillStyle = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
+      context.fillRect(bin * 2, 0, 2, 200);
     }          
   };
   setInterval(draw, 20);
 }
 
 soundcloudFetch('https://soundcloud.com/matzelu/summer-is-comming')
-    .then(decode)
-    .then(setupSource);
+  .then(decode)
+  .then(setupSource);
 
 play.addEventListener('click', () => source.start(0));
 stop.addEventListener('click', () => source.stop(0));
