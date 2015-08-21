@@ -16,9 +16,6 @@ React.render(<App/>, document.querySelector('div[app]'));
 
 const CLIENT_ID = `9c470b57005415330972a0b5cca327e2`;
 
-// SC.initialize({
-//   client_id: CLIENT_ID
-// });
 
 let d = document;
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -28,11 +25,22 @@ let stop = d.querySelector('.stop');
 let canvas = d.getElementById('canvas');
 let context = canvas.getContext("2d");
 
+play.setAttribute('disabled', 'disabled');
+
 let analyser;
 let bin;
 let source;
 
 let decode = buffer => new Promise(resolve => audioCtx.decodeAudioData(buffer, resolve));
+
+let setupSource = decodedBuffer => {
+  source = audioCtx.createBufferSource();
+  source.buffer = decodedBuffer;
+  source.connect(audioCtx.destination);
+  play.removeAttribute('disabled');
+  // source.start(0);
+  analyse();
+}
 
 //Anaylse that shit
 let analyse = () => {
@@ -66,19 +74,9 @@ let analyse = () => {
   setInterval(draw, 20);
 }
 
-play.onclick = () => {
-  soundcloudFetch('https://soundcloud.com/matzelu/summer-is-comming')
+soundcloudFetch('https://soundcloud.com/matzelu/summer-is-comming')
     .then(decode)
-    .then(decodedBuffer => {
-      source = audioCtx.createBufferSource();
-      source.buffer = decodedBuffer;
-      source.connect(audioCtx.destination);
-      source.start(0);
-      analyse();
-    });
-}
+    .then(setupSource);
 
-stop.onclick = () => {
-  source.stop(0);
-  play.removeAttribute('disabled');
-}
+play.addEventListener('click', () => source.start(0));
+stop.addEventListener('click', () => source.stop(0));
